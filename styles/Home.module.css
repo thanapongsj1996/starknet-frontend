@@ -12,6 +12,24 @@
   align-items: center;
 }
 
+.btn {
+  border: none;
+  border-radius: 10px;
+  margin: 6px;
+  padding: 12px;
+  background-color: #58D68D;
+  cursor: pointer;
+  font-size: 18px;
+}
+.btn:hover {
+  background-color: #2ECC71;
+}
+
+.amount__input {
+  padding: 10px;
+  font-size: 18px;
+}
+
 .footer {
   display: flex;
   flex: 1;
