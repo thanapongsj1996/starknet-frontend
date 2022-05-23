@@ -64,9 +64,7 @@ const Home: NextPage = () => {
     starknet?.account.execute({
       contractAddress: userBalanceContractAddr,
       entrypoint: fnName,
-      calldata: compileCalldata({
-        amount: `${amount}`
-      })
+      calldata: [`${amount}`]
     })
   }
 
