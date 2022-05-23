@@ -6,7 +6,8 @@ import { connect, IStarknetWindowObject } from '@argent/get-starknet'
 import styles from '../styles/Home.module.css'
 
 const { compileCalldata } = stark
-const userBalanceContractAddr = '0x062df77e8b24159df7a92981caf07c0c83c3574a1a329204884081dbdacd54da'
+// const userBalanceContractAddr = '0x062df77e8b24159df7a92981caf07c0c83c3574a1a329204884081dbdacd54da'
+const userBalanceContractAddr = '0x0428cfc80cb1eede2384003f4ca4ac516d00efec11a9865d52b0c8d3a005f270'
 
 const Home: NextPage = () => {
 
@@ -15,8 +16,11 @@ const Home: NextPage = () => {
   const [curBalance, setCurBalance] = useState(0)
 
   const connectWallet = async () => {
-    connect()
-      .then((res) => setStarknet(res as IStarknetWindowObject))
+    connect({ modalOptions: { theme: 'dark' } })
+      .then((res) => {
+        setStarknet(res as IStarknetWindowObject)
+        res?.enable()
+      })
       .finally(() => console.log('address: ', starknet?.account?.address))
   }
 
@@ -37,22 +41,6 @@ const Home: NextPage = () => {
       const balance = getNumber(data.result[0])
       console.log('balance : ', balance)
       setCurBalance(balance)
-    }
-  }
-
-  const getOne = async () => {
-    console.log('address: ', starknet?.account?.address)
-
-    if (!starknet || !starknet.account || !starknet.account.address) connectWallet()
-
-    const data = await starknet?.provider.callContract({
-      contractAddress: userBalanceContractAddr,
-      entrypoint: 'get_one',
-      calldata: ['100'],
-    })
-
-    if (data && data.result[0]) {
-      console.log(getNumber(data.result[0]))
     }
   }
 
