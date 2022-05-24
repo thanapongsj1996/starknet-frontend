@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { NextPage } from 'next'
 import { stark } from 'starknet'
 import { connect, IStarknetWindowObject } from '@argent/get-starknet'
@@ -6,8 +6,8 @@ import { connect, IStarknetWindowObject } from '@argent/get-starknet'
 import styles from '../styles/Home.module.css'
 
 const { compileCalldata } = stark
-// const userBalanceContractAddr = '0x062df77e8b24159df7a92981caf07c0c83c3574a1a329204884081dbdacd54da'
-const userBalanceContractAddr = '0x0428cfc80cb1eede2384003f4ca4ac516d00efec11a9865d52b0c8d3a005f270'
+// const CONTRACT_ADDRESS = '0x00872f12ba1c02fcea6a82765d09df595dec76ba4103f2f40b4fe85e8a1ad909'
+const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS as string
 
 type Starknet = IStarknetWindowObject | null
 
@@ -17,11 +17,16 @@ const Home: NextPage = () => {
   const [curBalance, setCurBalance] = useState(0)
   const [starknet, setStarknet] = useState(null as Starknet)
 
+  useEffect(() => {
+    if (starknet) {
+      starknet?.enable().then(() => getBalance())
+    }
+  }, [starknet])
+
   const connectWallet = async () => {
     connect({ modalOptions: { theme: 'dark' } })
-      .then((res) => {
+      .then(async (res) => {
         setStarknet(res as Starknet)
-        res?.enable()
       })
       .finally(() => console.log('address: ', starknet?.account?.address))
   }
@@ -29,10 +34,8 @@ const Home: NextPage = () => {
   const getBalance = async () => {
     console.log('address: ', starknet?.account?.address)
 
-    isWalletConnected()
-
     const data = await starknet?.provider.callContract({
-      contractAddress: userBalanceContractAddr,
+      contractAddress: CONTRACT_ADDRESS,
       entrypoint: 'get_balance',
       calldata: compileCalldata({
         user: starknet?.selectedAddress as string
@@ -49,21 +52,23 @@ const Home: NextPage = () => {
   const updateBalance = async (fnName: string) => {
     console.log('address: ', starknet?.account?.address)
 
-    isWalletConnected()
-
     starknet?.account.execute({
-      contractAddress: userBalanceContractAddr,
+      contractAddress: CONTRACT_ADDRESS,
       entrypoint: fnName,
       calldata: [`${amount}`]
+    }).then(() => {
+      getBalance()
+      setAmount(0)
     })
-  }
-
-  const isWalletConnected = () => {
-    if (!starknet || !starknet.account || !starknet.account.address) connectWallet()
   }
 
   const getNumber = (num: string) => {
     return parseInt(num, 16)
+  }
+
+  const formattedSelectedAccount = (acc: string | undefined) => {
+    if (acc && acc != '') return acc.slice(0, 8) + '...' + acc.slice(-6)
+    return ''
   }
 
   return (
@@ -80,24 +85,38 @@ const Home: NextPage = () => {
           </button>
         }
 
-        {starknet &&
+        {starknet && starknet.isConnected &&
           <>
-            <button className={styles.btn} onClick={() => getBalance()}>Get Balance</button>
-            <h2>Current Balance: {curBalance}</h2>
+            <p className={styles.address}><strong>Address: </strong>
+              {formattedSelectedAccount(starknet?.account?.address)}
+            </p>
 
-            <input className={styles.amount__input} onChange={e => setAmount(parseInt(e.target.value))} />
-            
+            {/* <button className={styles.btn} onClick={() => getBalance()}>Get Balance</button> */}
+
+            <h2>Current Balance: {curBalance}</h2>
+            <input
+              placeholder='amount'
+              className={styles.amount__input}
+              onChange={e => setAmount(parseInt(e.target.value))}
+            />
+
             <div>
-              <button className={styles.btn} onClick={() => updateBalance('increase_balance')}>
+              <button
+                className={styles.btn}
+                onClick={() => updateBalance('increase_balance')}
+              >
                 Increase Balance
               </button>
-              <button className={styles.btn} onClick={() => updateBalance('decrease_balance')}>
+
+              <button
+                className={styles.btn}
+                onClick={() => updateBalance('decrease_balance')}
+              >
                 Decrease Balance
               </button>
             </div>
           </>
         }
-
       </main>
     </div>
   )

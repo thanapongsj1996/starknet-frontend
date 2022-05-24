@@ -3,7 +3,7 @@
 }
 
 .main {
-  min-height: 100vh;
+  min-height: 70vh;
   padding: 4rem 0;
   flex: 1;
   display: flex;
@@ -28,6 +28,10 @@
 .amount__input {
   padding: 10px;
   font-size: 18px;
+}
+
+.address {
+  font-size: 24px;
 }
 
 .footer {
